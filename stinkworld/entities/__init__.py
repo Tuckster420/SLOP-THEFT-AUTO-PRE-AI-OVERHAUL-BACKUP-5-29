@@ -1,0 +1,1 @@
+"""Game entities like players, NPCs, and vehicles.""" 

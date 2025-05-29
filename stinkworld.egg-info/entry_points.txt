@@ -1,0 +1,2 @@
+[console_scripts]
+stinkworld = stinkworld.core.main:main

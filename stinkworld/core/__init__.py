@@ -1,0 +1,1 @@
+"""Core game mechanics and main game loop.""" 

@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: stinkworld
+Version: 1.0.0
+Summary: StinkWorld - A Python-based open-world game
+Author: Original Author
+Keywords: game,pygame,open-world
+Requires-Python: >=3.8
+Requires-Dist: pygame>=2.5.0
+Requires-Dist: numpy>=1.24.0
+Dynamic: author
+Dynamic: keywords
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
