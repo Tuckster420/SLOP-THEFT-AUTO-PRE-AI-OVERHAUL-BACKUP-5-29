@@ -171,9 +171,15 @@ def decide_action(npc, game_state):
     """
     try:
         npc_id = getattr(npc, 'npc_id', None)
-        if not npc_id or npc_id not in DATA['npcs']:
-            print(f"[smart_npc WARNING] NPC {npc_id} missing from definitions, falling back.")
-            return _fallback(npc)
+        if not npc_id:
+            print(f"[smart_npc ERROR] NPC has no ID and will not be processed. Name: {getattr(npc, 'name', '?')}")
+            return {'action': 'idle', 'target': None, 'with': None}
+        if npc_id not in DATA['npcs']:
+            # Only print once per missing id
+            if not hasattr(npc, '_warned_missing_id'):
+                print(f"[smart_npc WARNING] NPC {npc_id} missing from definitions, skipping AI for this NPC.")
+                npc._warned_missing_id = True
+            return {'action': 'idle', 'target': None, 'with': None}
         profile = DATA['npcs'][npc_id]
         job = profile.get('job')
         job_info = DATA['jobs'].get(job)

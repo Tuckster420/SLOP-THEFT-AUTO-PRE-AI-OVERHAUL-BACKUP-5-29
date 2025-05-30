@@ -186,7 +186,14 @@ class WeatherSystem:
             elif particle_type == 'fog':
                 fog_surface = pygame.Surface((particle['size'], particle['size']))
                 fog_surface.fill((200, 200, 200))
-                fog_surface.set_alpha(particle['alpha'])
+                alpha = particle.get('alpha', 255)
+                if 'alpha' not in particle:
+                    try:
+                        from stinkworld.utils.debug import debug_log
+                    except ImportError:
+                        def debug_log(msg): print(msg)
+                    debug_log(f"[weather WARNING] Fog particle missing 'alpha', using default 255: {particle}")
+                fog_surface.set_alpha(alpha)
                 screen.blit(fog_surface, (particle['x'], particle['y']))
                 
                 # Slowly move fog

@@ -27,6 +27,7 @@ from stinkworld.entities.car import Car
 from stinkworld.systems.traffic import TrafficLight
 from stinkworld.combat.messages import car_combat_message
 from stinkworld.ui.appearance import draw_portrait
+from stinkworld.systems.smart_npc import decide_action, maybe_spread_rumor, handle_player_threat
 
 # Viewport size in tiles
 from stinkworld.core.settings import TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
@@ -162,7 +163,25 @@ class Game:
                         move_cooldown = 10
                         # Update NPCs (turn-based)
                         for npc in self.npcs:
-                            npc.update(self.city.map, self.traffic_lights, self.npcs)
+                            try:
+                                npc.update(self.city.map, self.traffic_lights, self.npcs)
+                                # --- Modular AI: decide action ---
+                                action = decide_action(npc, self)
+                                # Example: handle move action (expand as needed)
+                                if action['action'] == 'move' and action['target']:
+                                    npc.x, npc.y = action['target']
+                                # --- Handle player threat if player is nearby and threatening ---
+                                if hasattr(npc, 'can_see_player') and npc.can_see_player(self.player):
+                                    # Example: check for a threat flag or recent violence (expand as needed)
+                                    if getattr(self.player, 'is_threatening', False):
+                                        handle_player_threat(npc, self.player, self)
+                            except Exception as e:
+                                debug_log(f"[Game WARNING] NPC update/AI failed for {getattr(npc, 'npc_id', '?')}: {e}")
+                        # --- Rumor system: periodically spread rumors ---
+                        try:
+                            maybe_spread_rumor(self)
+                        except Exception as e:
+                            debug_log(f"[Game WARNING] RumorMill failed: {e}")
                         # Update cars (AI for all undriven cars)
                         for car in self.cars:
                             if not car.driver:
@@ -175,11 +194,23 @@ class Game:
                     self.time_system.advance_time()
                     move_cooldown = 10
                     for npc in self.npcs:
-                        npc.update(self.city.map, self.traffic_lights, self.npcs)
+                        try:
+                            npc.update(self.city.map, self.traffic_lights, self.npcs)
+                            action = decide_action(npc, self)
+                            if action['action'] == 'move' and action['target']:
+                                npc.x, npc.y = action['target']
+                            if hasattr(npc, 'can_see_player') and npc.can_see_player(self.player):
+                                if getattr(self.player, 'is_threatening', False):
+                                    handle_player_threat(npc, self.player, self)
+                        except Exception as e:
+                            debug_log(f"[Game WARNING] NPC update/AI failed for {getattr(npc, 'npc_id', '?')}: {e}")
+                    try:
+                        maybe_spread_rumor(self)
+                    except Exception as e:
+                        debug_log(f"[Game WARNING] RumorMill failed: {e}")
                     for car in self.cars:
                         if not car.driver:
                             car.update_ai(self.city.map, self.traffic_lights, self.npcs)
-                    # --- WEATHER SYSTEM: update weather each turn ---
                     current_date = self.time_system.get_current_datetime()
                     self.weather_system.update_weather(current_date)
 
@@ -805,13 +836,14 @@ class Game:
 
     def spawn_npcs(self, count=50):
         """Spawn NPCs in walkable areas."""
-        for _ in range(count):
+        for i in range(count):
             x, y = self.city.find_walkable_tile()
             if x is not None and y is not None:
                 name = random_name()
-                npc = NPC(name, x, y)
+                npc_id = f"npc_{i+1:04d}"
+                npc = NPC(name, x, y, npc_id=npc_id)
                 self.npcs.append(npc)
-                self.debug(f"Spawned NPC {name} at ({x}, {y})")
+                self.debug(f"Spawned NPC {name} (ID: {npc_id}) at ({x}, {y})")
 
     def spawn_cars(self, count=30):
         """Spawn cars at random road positions."""
@@ -992,3 +1024,19 @@ class Game:
         weather_text = self.weather_system.get_description()
         weather_surface = font.render(weather_text, True, (200, 200, 255))
         self.screen.blit(weather_surface, (10, self.screen.get_height() - 100))
+
+    def start_combat(self, npc):
+        """Begin combat with the given NPC."""
+        if npc is None:
+            debug_log("[Game ERROR] start_combat called with None NPC.")
+            return
+        if not hasattr(npc, 'name') or not hasattr(npc, 'npc_id'):
+            debug_log(f"[Game ERROR] start_combat: NPC missing name or npc_id: {npc}")
+            return
+        print(f"Starting combat with {npc.name} ({npc.npc_id})")
+        try:
+            from stinkworld.combat.system import start_combat as combat_start
+            combat_start(self, npc)
+        except Exception as e:
+            debug_log(f"[Game ERROR] Combat system failed to start: {e}")
+            self.show_message_and_wait(f"Combat could not be started with {npc.name}.")

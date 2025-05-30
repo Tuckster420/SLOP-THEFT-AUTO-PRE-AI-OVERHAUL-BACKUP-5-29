@@ -1,6 +1,7 @@
 import pygame
 import random
 import math
+import itertools
 from stinkworld.core.settings import (
     TILE_SIZE, COLOR_NPC, MAP_WIDTH, MAP_HEIGHT, TILE_ROAD, TILE_PARK, TILE_FLOOR, TILE_DOOR, TILE_GRASS,
     NPC_SPEED, NPC_MAX_HP, NPC_VIEW_DISTANCE, COLOR_WHITE
@@ -63,6 +64,8 @@ PERSONALITIES = [
     'Forgiving', 'Grudgeful', 'Chatty', 'Quiet'
 ]
 
+_npc_id_counter = itertools.count(1)
+
 def random_name():
     group = random.choices(
         ["fem", "masc", "nb"], weights=[0.4, 0.4, 0.2]
@@ -94,11 +97,20 @@ BODY_PARTS = [
 class NPC:
     """Non-player character class."""
     
-    def __init__(self, name, x, y, personality=None):
+    def __init__(self, name, x, y, personality=None, npc_id=None):
         """Initialize NPC."""
         self.name = name
         self.x = x
         self.y = y
+        
+        # Assign a unique npc_id if not provided
+        if npc_id is None:
+            self.npc_id = f"npc_{next(_npc_id_counter):04d}"
+        else:
+            self.npc_id = str(npc_id)
+        if not self.npc_id:
+            debug_log(f"[NPC ERROR] NPC created without a valid npc_id! Name: {self.name}")
+            self.npc_id = f"npc_{next(_npc_id_counter):04d}"
         
         # Stats
         self.hp = NPC_MAX_HP
