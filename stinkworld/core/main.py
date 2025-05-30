@@ -15,6 +15,7 @@ from stinkworld.core.settings import Settings
 from stinkworld.ui.menus import main_menu
 from stinkworld.entities.character_creation import character_creation
 from stinkworld.utils.debug import debug_log
+from stinkworld.core.lore import ENABLE_LORE_SCREEN, show_lore_screen
 
 def main():
     """Main entry point for the game."""
@@ -23,7 +24,12 @@ def main():
         settings = Settings()
         screen = pygame.display.set_mode((settings.screen_width, settings.screen_height))
         pygame.display.set_caption("Slop Theft Auto")
-        
+        # Show lore screen if enabled
+        if ENABLE_LORE_SCREEN:
+            try:
+                show_lore_screen(screen)
+            except Exception as e:
+                debug_log(f"[LORE ERROR] {e}")
         # Start with main menu
         running = True
         while running:
