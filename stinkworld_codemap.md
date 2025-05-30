@@ -54,6 +54,7 @@
 - **AI Instructions:**  
   - To add a new system (e.g., hunger), create a new file and instantiate in `Game`.
   - To change how time or weather works, edit the respective file.
+  - **Weather system is now fully restored, modular, and integrated. Weather effects (rain, snow, fog, etc.) are rendered, update each turn, and display in the HUD.**
 
 ---
 

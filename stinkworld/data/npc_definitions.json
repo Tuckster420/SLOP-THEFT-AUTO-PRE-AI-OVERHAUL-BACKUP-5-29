@@ -1,0 +1,24 @@
+{
+  "jobs": {
+    "blacksmith": {"location": [10, 20], "hours": [6, 12]},
+    "herbalist": {"location": [15, 5], "hours": [8, 14]},
+    "guard": {"location": [5, 5], "hours": [0, 24]},
+    "tavernkeeper": {"location": [12, 8], "hours": [10, 22]}
+  },
+  "npcs": {
+    "npc_01": {"job": "blacksmith", "home": [11, 21], "family": ["npc_02", "npc_03"], "relationships": {"npc_04": -10}},
+    "npc_02": {"job": "herbalist", "home": [16, 6], "family": ["npc_01"], "relationships": {"npc_01": 20}},
+    "npc_03": {"job": "guard", "home": [6, 6], "family": ["npc_01"], "relationships": {}},
+    "npc_04": {"job": "tavernkeeper", "home": [13, 9], "family": [], "relationships": {"npc_01": -10}}
+  },
+  "routines": {
+    "default": [
+      {"time": 6, "action": "go_to_work"},
+      {"time": 12, "action": "eat_lunch"},
+      {"time": 13, "action": "return_to_work"},
+      {"time": 16, "action": "go_home"},
+      {"time": 18, "action": "socialize"},
+      {"time": 22, "action": "sleep"}
+    ]
+  }
+}
