@@ -19,6 +19,10 @@ import json
 import os
 import random
 import time
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # --- Load DATA from external JSON file ---
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'npc_definitions.json')
@@ -177,8 +181,16 @@ def decide_action(npc, game_state):
         if npc_id not in DATA['npcs']:
             # Only print once per missing id
             if not hasattr(npc, '_warned_missing_id'):
-                print(f"[smart_npc WARNING] NPC {npc_id} missing from definitions, skipping AI for this NPC.")
+                logger.warning(f"NPC {npc_id} missing from definitions, generating default AI behavior.")
                 npc._warned_missing_id = True
+            
+            # Generate a default profile
+            profile = {
+                "job": "unemployed",
+                "home": [0, 0],
+                "family": [],
+                "relationships": {}
+            }
             return {'action': 'idle', 'target': None, 'with': None}
         profile = DATA['npcs'][npc_id]
         job = profile.get('job')
