@@ -121,6 +121,8 @@ PROP_PROP_CANDIDATES = [
     'plant_01', 'plant_02', 'plant_03', 'plant_04', 'plant_05'
 ]
 
+CAR_SPEED = 5  # Define the car speed constant
+
 class Settings:
     """Game settings class that encapsulates all game settings."""
     def __init__(self):

@@ -477,8 +477,14 @@ class Graphics:
         if sprite:
             if direction == 'horizontal':
                 blit_sprite = pygame.transform.scale(sprite, (size*2, size))
+                # Flip horizontally if moving left
+                if hasattr(self, 'car_direction') and self.car_direction == 'left':
+                    blit_sprite = pygame.transform.flip(blit_sprite, True, False)
             else:
                 blit_sprite = pygame.transform.rotate(pygame.transform.scale(sprite, (size*2, size)), 90)
+                # Flip vertically if moving up
+                if hasattr(self, 'car_direction') and self.car_direction == 'up':
+                    blit_sprite = pygame.transform.flip(blit_sprite, False, True)
             surface.blit(blit_sprite, (x, y))
         else:
             color = self.car_colors.get(car_type, (255, 0, 0))

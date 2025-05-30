@@ -2,6 +2,7 @@
 import random
 from datetime import datetime
 from stinkworld.utils.debug import debug_log
+import pygame  # Needed for apply_weather_effects and update_particles
 
 class WeatherSystem:
     """Manages game weather conditions."""
@@ -162,6 +163,11 @@ class WeatherSystem:
         
         # Update existing particles
         for particle in self.particles[:]:
+            # --- Fix: Ensure 'speed' key exists before using it ---
+            if particle_type in ('rain', 'snow'):
+                if 'speed' not in particle:
+                    # Assign a sensible default speed if missing
+                    particle['speed'] = 10 if particle_type == 'rain' else 2
             if particle_type == 'rain':
                 particle['y'] += particle['speed']
                 pygame.draw.line(screen, (200, 200, 255),
@@ -169,7 +175,6 @@ class WeatherSystem:
                                (particle['x'], particle['y'] + particle['length']))
                 if particle['y'] > screen.get_height():
                     self.particles.remove(particle)
-            
             elif particle_type == 'snow':
                 particle['y'] += particle['speed']
                 particle['x'] += random.randint(-1, 1)
@@ -178,7 +183,6 @@ class WeatherSystem:
                                  particle['size'])
                 if particle['y'] > screen.get_height():
                     self.particles.remove(particle)
-            
             elif particle_type == 'fog':
                 fog_surface = pygame.Surface((particle['size'], particle['size']))
                 fog_surface.fill((200, 200, 200))

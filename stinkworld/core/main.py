@@ -30,10 +30,23 @@ def main():
             choice = main_menu(screen)
             if choice == 0:  # New Game
                 # Create character first
+                print("\n=== CHARACTER CREATION ===")
                 player = character_creation(screen, settings)
                 if player:  # Only start game if character was created
-                    game = Game(settings)
-                    game.player = player  # Set the created player
+                    game = Game(settings)  # This finds the proper spawn position
+                    
+                    # DEBUG: Show positions before assignment
+                    print(f"[DEBUG] Character position: ({player.x}, {player.y})")
+                    print(f"[DEBUG] Game spawn position: ({game.player.x}, {game.player.y})")
+                    
+                    # Preserve the game's calculated spawn position
+                    player.x = game.player.x
+                    player.y = game.player.y
+                    game.player = player
+                    
+                    # DEBUG: Verify final position
+                    print(f"[DEBUG] Final player position: ({game.player.x}, {game.player.y})")
+                    
                     game.run()
             elif choice == 2:  # Exit
                 running = False

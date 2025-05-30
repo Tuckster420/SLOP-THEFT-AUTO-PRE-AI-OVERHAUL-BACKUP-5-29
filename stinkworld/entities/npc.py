@@ -182,6 +182,8 @@ class NPC:
         # Optional status flags
         self.vandalized = False
         self.robbed = False
+        self.driving_skill = random.randint(1, 5)  # 1-5 scale
+        self.current_vehicle = None
 
     def adjust_stats_by_personality(self):
         """Adjust NPC stats based on their personality"""
@@ -212,27 +214,18 @@ class NPC:
         }
         return schedule
 
-    def update(self, city_map, npcs, player, cars):
-        """Update NPC state and behavior."""
+    def update(self, city_map, npcs, player):
+        """Guaranteed NPC movement"""
         if self.is_dead or self.is_knocked_out:
             return
-        
-        # Check for player in view distance
-        if self.can_see_player(player):
-            if self.is_hostile:
-                self.target = player
-                self.move_towards_target(city_map, npcs, cars)
-            elif self.personality == 'friendly':
-                # Friendly NPCs might approach player
-                if random.random() < 0.1:  # 10% chance to approach
-                    self.target = player
-                    self.move_towards_target(city_map, npcs, cars)
-            else:
-                # Neutral NPCs mind their own business
-                self.wander(city_map, npcs, cars)
-        else:
-            self.wander(city_map, npcs, cars)
-    
+        if random.random() < 0.3:  # 30% chance to move each turn
+            directions = [(0,1),(0,-1),(1,0),(-1,0)]
+            dx, dy = random.choice(directions)
+            if self.is_walkable(city_map, self.x + dx, self.y + dy):
+                self.x += dx
+                self.y += dy
+                print(f"NPC moved to ({self.x}, {self.y})")
+
     def can_see_player(self, player):
         """Check if NPC can see the player."""
         if player.is_dead:
@@ -540,3 +533,65 @@ class NPC:
         pygame.draw.line(screen, (100, 0, 0),
                         (screen_x + 24, screen_y + 8),
                         (screen_x + 8, screen_y + 24))
+
+    def can_drive(self):
+        """Check if NPC can drive based on their skills."""
+        return self.driving_skill > 2  # Only skilled enough NPCs can drive
+        
+    def enter_vehicle(self, vehicle):
+        """Attempt to enter a vehicle."""
+        if not self.can_drive():
+            return False
+            
+        if vehicle.set_driver(self):
+            self.current_vehicle = vehicle
+            return True
+        return False
+        
+    def exit_vehicle(self):
+        """Exit current vehicle if in one."""
+        if self.current_vehicle:
+            self.current_vehicle.remove_driver()
+            self.current_vehicle = None
+            return True
+        return False
+        
+    def update_driving(self, city_map, npcs, player=None, cars=None):
+        """Update behavior when driving a vehicle."""
+        if not self.current_vehicle:
+            return
+            
+        # If we have a destination, drive toward it
+        if hasattr(self, 'destination') and self.destination:
+            dx = self.destination[0] - self.current_vehicle.x
+            dy = self.destination[1] - self.current_vehicle.y
+            
+            # Simple driving logic - could be improved with proper pathfinding
+            if abs(dx) > abs(dy):
+                self.current_vehicle.handle_player_input(1 if dx > 0 else -1, 0, city_map, [], npcs)
+            else:
+                self.current_vehicle.handle_player_input(0, 1 if dy > 0 else -1, city_map, [], npcs)
+        else:
+            # Random driving if no destination
+            direction = random.choice(['up', 'down', 'left', 'right'])
+            if direction == 'up':
+                self.current_vehicle.handle_player_input(0, -1, city_map, [], npcs)
+            elif direction == 'down':
+                self.current_vehicle.handle_player_input(0, 1, city_map, [], npcs)
+            elif direction == 'left':
+                self.current_vehicle.handle_player_input(-1, 0, city_map, [], npcs)
+            elif direction == 'right':
+                self.current_vehicle.handle_player_input(1, 0, city_map, [], npcs)
+
+    def debug(self, message):
+        """Log debug messages."""
+        debug_log(message)
+
+    def is_walkable(self, city_map, x, y):
+        """Check if a tile is walkable for NPCs."""
+        if isinstance(city_map, list):
+            if 0 <= x < len(city_map[0]) and 0 <= y < len(city_map):
+                return city_map[y][x] in (0, 1)  # 0=road, 1=sidewalk
+            return False
+        else:
+            return city_map.is_walkable(x, y)

@@ -16,6 +16,15 @@ class TimeSystem:
         self.MINUTES_PER_HOUR = 60
         self.HOURS_PER_DAY = 24
         self.MINUTES_PER_DAY = self.MINUTES_PER_HOUR * self.HOURS_PER_DAY
+        
+        # --- Lighting values for each time of day (used by get_lighting_color) ---
+        # Format: (R, G, B, alpha)
+        self.lighting = {
+            'day': (0, 0, 0, 0),         # No overlay during day
+            'dawn': (80, 60, 40, 60),    # Warm, soft overlay
+            'dusk': (60, 40, 80, 80),    # Cool, purple overlay
+            'night': (0, 0, 0, 128)      # Dark overlay at night
+        }
     
     def update(self):
         """Update game time."""
@@ -75,7 +84,9 @@ class TimeSystem:
     
     def get_lighting_color(self):
         """Get the current lighting color based on time of day."""
-        return self.lighting[self.get_time_of_day()]
+        # --- Use self.lighting dict, fallback to day if missing ---
+        tod = self.get_time_of_day()
+        return self.lighting.get(tod, (0, 0, 0, 0))
     
     def format_time(self):
         """Format the current time as HH:MM."""
@@ -110,8 +121,9 @@ class TimeSystem:
         return "Clear"
     
     def advance_time(self):
-        """Advance the game time by one update step (for compatibility)."""
-        self.update()
+        """Advance time by one turn (only called when player acts)."""
+        self.current_minute = (self.current_minute + 1) % self.MINUTES_PER_DAY
+        debug_log(f"[TimeSystem] Time advanced to {self.get_time_string()}")
     
     def get_current_day(self):
         """Return the current in-game day number (starting from 1)."""

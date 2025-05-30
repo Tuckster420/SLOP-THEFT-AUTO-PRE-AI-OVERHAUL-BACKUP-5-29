@@ -1,6 +1,7 @@
 import os
 import traceback
 from datetime import datetime
+import time
 
 def debug_log(message):
     """
@@ -30,3 +31,9 @@ def try_log_write(path, message):
     
     with open(path, 'a', encoding='utf-8') as f:
         f.write(log_line)
+
+def log_debug(message):
+    """Log debug messages to a file with timestamps."""
+    with open('game_debug.log', 'a') as f:
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+        f.write(f"[{timestamp}] {message}\n")
